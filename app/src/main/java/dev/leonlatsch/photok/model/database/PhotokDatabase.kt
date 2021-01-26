@@ -16,11 +16,15 @@
 
 package dev.leonlatsch.photok.model.database
 
+import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import dev.leonlatsch.photok.model.database.PhotokDatabase.Companion.VERSION
+import dev.leonlatsch.photok.model.database.dao.CollectionDao
 import dev.leonlatsch.photok.model.database.dao.PhotoDao
+import dev.leonlatsch.photok.model.database.entity.Collection
 import dev.leonlatsch.photok.model.database.entity.Photo
 
 /**
@@ -30,7 +34,7 @@ import dev.leonlatsch.photok.model.database.entity.Photo
  * @author Leon Latsch
  */
 @Database(
-    entities = [Photo::class],
+    entities = [Photo::class, Collection::class],
     version = VERSION,
     exportSchema = false
 )
@@ -38,12 +42,30 @@ import dev.leonlatsch.photok.model.database.entity.Photo
 abstract class PhotokDatabase : RoomDatabase() {
 
     companion object {
-        const val VERSION = 1
+
+        fun build(context: Context): PhotokDatabase =
+            Room.databaseBuilder(context, PhotokDatabase::class.java, DATABASE_NAME)
+                .addMigrations(MIGRATION_1_2)
+                .build()
+
+        const val VERSION = 2
         const val DATABASE_NAME = "photok.db"
+
+        // Migrations
+
+        private val MIGRATION_1_2 = SimpleMigration(1, 2) {
+            it.execSQL("CREATE TABLE `collection` (`id` INTEGER, `uuid` TEXT, `thumbnail` TEXT, PRIMARY KEY(`id`) )")
+            it.execSQL("CREATE TABLE `photoCollectionRel` (`collectionId` INTEGER, `photoId` INTEGER, PRIMARY KEY(`collectionId`, `photoId`) )")
+        }
     }
 
     /**
      * Get the data access object for [Photo]
      */
     abstract fun getPhotoDao(): PhotoDao
+
+    /**
+     * Get the data access object for [Collection]
+     */
+    abstract fun getCollectionDao(): CollectionDao
 }

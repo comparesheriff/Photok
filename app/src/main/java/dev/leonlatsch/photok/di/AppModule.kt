@@ -42,11 +42,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providePhotokDatabase(@ApplicationContext app: Context) = Room.databaseBuilder(
-        app,
-        PhotokDatabase::class.java,
-        DATABASE_NAME
-    ).build()
+    fun providePhotokDatabase(@ApplicationContext app: Context) = PhotokDatabase.build(app)
 
     @Provides
     @Singleton
